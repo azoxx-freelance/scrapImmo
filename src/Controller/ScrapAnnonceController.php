@@ -1,132 +1,106 @@
 <?php
+/*
+Home
+reset filters
+Filters on links
+Filters on Giveaway // ended Status, Close, delete GV
+new card label
+Download link increase stat on click
+repair logger
 
-namespace App\Tests;
+select tool
+resize image UI
+resize image size upload
+refactor links (https://citizen.freshkiwi.net/)
+refactor GV page
+
+Add number of selection on head filter
+multinavigator
+SEO
+modify head
+traduction
+check .net url
+*/
+
+namespace App\Controller;
 
 use App\Entity\Annonce;
-use App\Service\ScrapAnnonceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Facebook\WebDriver\WebDriverBy;
-use PHPUnit\Framework\TestCase;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Panther\Client;
+use Symfony\Component\Routing\Annotation\Route;
 
-class DemoTest extends WebTestCase
+/**
+ * @Route("/scrap", name="scrap_")
+ */
+class ScrapAnnonceController extends AbstractController
 {
-    private $em;
-    private $crawler;
-    private $client;
-    private $domDocument;
+    private EntityManagerInterface $entityManager;
 
-    //public function testTrueIsTrue()
-    public function testScrapAnnonceSeLoger()
+    public function __construct(EntityManagerInterface $entityManager)
     {
-        $this->em = static::getContainer()->get(EntityManagerInterface::class);
-        $annonceRepo = $this->em->getRepository(Annonce::class);
-        $hasResult = true;
-        $page = 1;
+        $this->entityManager = $entityManager;
+    }
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////// SCRAP ALL NEW ANNONCES /////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * @Route("/", name="main")
+     */
+    public function index(Request $request): Response
+    {
+        $this->client = $this->initPantherClient();
+        $this->assertNoSymfonyException($this->client, '[data-testid="serp-core-scrollablelistview-testid"]');
+        sleep(1);
 
+        $this->crawler = $this->client->refreshCrawler();
 
-        while($hasResult) {
-            $this->initPantherClient($page, ($page == 1));
-            $this->assertNoSymfonyException($this->client, '[data-testid="serp-core-scrollablelistview-testid"]');
-            $xpath = $this->geXPath();
-            $nodes = $xpath->query('//*'.'[@data-testid="card-mfe-covering-link-testid"]');
-            dump('Nombre de blocs trouvés : ' . $nodes->length);
+        //$nodes = $this->getNodesFromSelector('[@data-testid="serp-core-classified-card-testid"]');
+        $nodes = $this->getNodesFromSelector('[@data-testid="card-mfe-covering-link-testid"]');
 
-            $result = ['added' => [], 'exist' => []];
+        $annonceRepo = $this->entityManager->getRepository(Annonce::class);
 
-            foreach ($nodes as $node) {
-                if ($node->nodeName !== 'a') {
-                    continue;
-                }
+        foreach ($nodes as $node) {
+            if ($node->nodeName !== 'a') {
+                continue;
+            }
 
-                $href = $node->getAttribute('href');
-                $hrefClean = explode('?', $href)[0];
+            $href = $node->getAttribute('href');
+            $hrefClean = explode('?', $href)[0];
 
-                if (preg_match('/\/([A-Za-z0-9]+)\.htm$/', $hrefClean, $matches)) {
-                    $idAnnonce = $matches[1];
+            // ✅ Extraction de l’ID via regex
+            if (preg_match('/\/(\d+)\.htm$/', $hrefClean, $matches)) {
+                $idAnnonce = $matches[1];
 
-                    $existingById = $annonceRepo->findOneBy(['id' => $idAnnonce]);
-                    $existingByUrl = $annonceRepo->findOneBy(['lien' => $hrefClean]);
+                $existingById = $annonceRepo->findOneBy(['id' => $idAnnonce]);
+                $existingByUrl = $annonceRepo->findOneBy(['lien' => $hrefClean]);
 
-                    if (!$existingById && !$existingByUrl) {
-                        $annonce = new Annonce();
-                        $annonce->setId($idAnnonce);
-                        $annonce->setLien($hrefClean);
-                        $annonce->setSource(Annonce::$sourceArray['SL']);
-                        $this->em->persist($annonce);
-                        $result['added'][] = $idAnnonce;
-                    } else {
-                        $result['exist'][] = $idAnnonce;
-                    }
+                if (!$existingById && !$existingByUrl) {
+                    $annonce = new Annonce();
+                    $annonce->setId($idAnnonce);
+                    $annonce->setLien($hrefClean);
+                    $annonce->setCreatedAt(new \DateTimeImmutable());
+                    $this->entityManager->persist($annonce);
+                    dump("Nouvelle annonce ajoutée : $idAnnonce");
+
                 } else {
-                    dump("Impossible d’extraire l’ID pour : $hrefClean");
+                    dump("Déjà existante : $hrefClean");
                 }
+            } else {
+                dump("Impossible d’extraire l’ID pour : $hrefClean");
             }
-
-            dump("Ajouté: " . count($result['added']));
-            dump("Existante: " . count($result['exist']));
-            //dump($result);
-
-            if(count($result['added']) == 0){
-                $hasResult = false;
-            }
-
-            $this->em->flush();
-            $page++;
         }
 
+        sleep(2);
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////// FILL NEW ANNONCES ///////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        $newAnnonces = $annonceRepo->findBy(['status' => null]);
-        dump("New Annonce: " . count($newAnnonces));
-
-        /** @var Annonce $annonce */
-        foreach ($newAnnonces as $annonce){
-            dump("#" . $annonce->getId());
-            $this->crawlNewUrl($annonce->getLien());
-            $xpath = $this->geXPath();
-
-            $nodeInfo = $xpath->query('//*'.'[@data-testid="cdp-seo-wrapper"]');
-            dump('nb: ' . $nodeInfo->length);
-
-                $outerHtml = $this->domDocument->saveHTML($nodeInfo[0]);
-                dump($outerHtml);
-
-            sleep(20);
-            exit;
-        }
-
-        sleep(20);
+        return new JsonResponse([]);
     }
 
 
+
     /*
-
-    https://www.seloger.com/classified-search?distributionTypes=Buy
-    &estateTypes=House,Apartment
-    &featuresIncluded=Parking_Garage
-    &locations=eyJwbGFjZUlkIjoiUE9DT0ZSNDQ0NyIsInJhZGl1cyI6MywicG9seWxpbmUiOiJffWx2R29rdVxcZkJibkBySGhsQHBOdmhAfFNwY0BuWGBdYlxcZlVyXnZMel9AckN6X0B1Q3Bed0xiXFxpVW5YYV18U3FjQHBOdWhAcEhpbEBmQmFuQGdCYW5AcUhnbEBxTndoQH1TcWNAb1hfXWNcXGtVcV53THtfQHNDe19AckNzXnRMY1xcaFVvWH5cXH1TcGNAcU52aEBzSGhsQGdCYm5AIiwiY29vcmRpbmF0ZXMiOnsibGF0Ijo0NS43NTU3Njc0Nzk4ODMxMiwibG5nIjo0Ljg2NTk5NzgwMjQ5NjI2fX0
-    &numberOfBedroomsMax=3
-    &numberOfBedroomsMin=1
-    &numberOfRoomsMax=5
-    &numberOfRoomsMin=2
-    &priceMax=300000
-    &spaceMin=30
-    &page=2
-    &order=DateDesc
-
-
-
     <div id="classified-card-25UPSVC4HVNR" data-testid="serp-core-classified-card-testid">
         <div class="css-79elbk" data-testid="classified-card-mfe-25UPSVC4HVNR">
             <a href="https://www.seloger.com/annonces/achat/appartement/lyon-3eme-69/252861745.htm?serp_view=list&amp;search=distributionTypes%3DBuy%26estateTypes%3DHouse%2CApartment%26featuresIncluded%3DParking_Garage%26locations%3DeyJwbGFjZUlkIjoiUE9DT0ZSNDQ0NyIsInJhZGl1cyI6MywicG9seWxpbmUiOiJffWx2R29rdVxcZkJibkBySGhsQHBOdmhAfFNwY0BuWGBdYlxcZlVyXnZMel9AckN6X0B1Q3Bed0xiXFxpVW5YYV18U3FjQHBOdWhAcEhpbEBmQmFuQGdCYW5AcUhnbEBxTndoQH1TcWNAb1hfXWNcXGtVcV53THtfQHNDe19AckNzXnRMY1xcaFVvWH5cXH1TcGNAcU52aEBzSGhsQGdCYm5AIiwiY29vcmRpbmF0ZXMiOnsibGF0Ijo0NS43NTU3Njc0Nzk4ODMxMiwibG5nIjo0Ljg2NTk5NzgwMjQ5NjI2fX0%26numberOfBedroomsMax%3D3%26numberOfBedroomsMin%3D1%26numberOfRoomsMax%3D5%26numberOfRoomsMin%3D2%26priceMax%3D300000%26spaceMin%3D30%26order%3DDateDesc#ln=classified_search_results&amp;m=classified_search_results_classified_classified_detail_M" target="_blank" data-plus="%3Fserp_view%3Dlist%26search%3DdistributionTypes%253DBuy%2526estateTypes%253DHouse%252CApartment%2526featuresIncluded%253DParking_Garage%2526locations%253DeyJwbGFjZUlkIjoiUE9DT0ZSNDQ0NyIsInJhZGl1cyI6MywicG9seWxpbmUiOiJffWx2R29rdVxcZkJibkBySGhsQHBOdmhAfFNwY0BuWGBdYlxcZlVyXnZMel9AckN6X0B1Q3Bed0xiXFxpVW5YYV18U3FjQHBOdWhAcEhpbEBmQmFuQGdCYW5AcUhnbEBxTndoQH1TcWNAb1hfXWNcXGtVcV53THtfQHNDe19AckNzXnRMY1xcaFVvWH5cXH1TcGNAcU52aEBzSGhsQGdCYm5AIiwiY29vcmRpbmF0ZXMiOnsibGF0Ijo0NS43NTU3Njc0Nzk4ODMxMiwibG5nIjo0Ljg2NTk5NzgwMjQ5NjI2fX0%2526numberOfBedroomsMax%253D3%2526numberOfBedroomsMin%253D1%2526numberOfRoomsMax%253D5%2526numberOfRoomsMin%253D2%2526priceMax%253D300000%2526spaceMin%253D30%2526order%253DDateDesc%23ln%3Dclassified_search_results%26m%3Dclassified_search_results_classified_classified_detail_M" title="Appartement à vendre - Lyon 3ème - 229\u{202F}000\u{A0}€ - 2 pièces, 1 chambre, 57,6 m², RDC/5" class="css-w5uu0r" style="z-index:19" data-testid="card-mfe-covering-link-testid">
@@ -302,7 +276,7 @@ class DemoTest extends WebTestCase
 
 
 
-     // _____________________ \\
+    // _____________________ \\
     // *** UTILS FUNCTIONS *** \\
 
     private function dumpMethod($method){
@@ -310,38 +284,35 @@ class DemoTest extends WebTestCase
         dump('*** '.$method.'() ***');
     }
 
-    private function initPantherClient($page = 1, $fullInit = true){
+    private function initPantherClient($client = null){
         $this->dumpMethod(__METHOD__);
         try {
-            if($fullInit) {
-                $this->killChromeProcesses();
-                $this->client = Client::createChromeClient(
-                    __DIR__ . '/../drivers/chromedriver.exe',
-                    [
-                        //'--headless=new',
-                        //'--disable-gpu',
-                        '--window-size=1920,1080',
-                    ]
-                );
+            $this->killChromeProcesses();
+            $client = Client::createChromeClient(
+                __DIR__ . '/../drivers/chromedriver.exe',
+                [
+                    //'--headless=new',
+                    //'--disable-gpu',
+                    '--window-size=1920,1080',
+                ]
+            );
 
-                sleep(1);
-                if (count($this->client->getWindowHandles()) === 0) {
-                    $this->fail('Le navigateur a été fermé prématurément.');
-                }
+            sleep(1);
+            if (count($client->getWindowHandles()) === 0) {
+                $this->fail('Le navigateur a été fermé prématurément.');
             }
 
-            $this->crawler = $this->client->request('GET', "https://www.seloger.com/classified-search?distributionTypes=Buy".
-                        "&estateTypes=House,Apartment".
-                        "&featuresIncluded=Parking_Garage".
-                        "&locations=eyJwbGFjZUlkIjoiUE9DT0ZSNDQ0NyIsInJhZGl1cyI6MywicG9seWxpbmUiOiJffWx2R29rdVxcZkJibkBySGhsQHBOdmhAfFNwY0BuWGBdYlxcZlVyXnZMel9AckN6X0B1Q3Bed0xiXFxpVW5YYV18U3FjQHBOdWhAcEhpbEBmQmFuQGdCYW5AcUhnbEBxTndoQH1TcWNAb1hfXWNcXGtVcV53THtfQHNDe19AckNzXnRMY1xcaFVvWH5cXH1TcGNAcU52aEBzSGhsQGdCYm5AIiwiY29vcmRpbmF0ZXMiOnsibGF0Ijo0NS43NTU3Njc0Nzk4ODMxMiwibG5nIjo0Ljg2NTk5NzgwMjQ5NjI2fX0".
-                        "&numberOfBedroomsMax=3".
-                        "&numberOfBedroomsMin=1".
-                        "&numberOfRoomsMax=5".
-                        "&numberOfRoomsMin=2".
-                        "&priceMax=300000".
-                        "&spaceMin=30".
-                        "&order=DateDesc".
-                        "&page=".$page);
+            $this->crawler = $client->request('GET', "https://www.seloger.com/classified-search?distributionTypes=Buy".
+                "&estateTypes=House,Apartment".
+                "&featuresIncluded=Parking_Garage".
+                "&locations=eyJwbGFjZUlkIjoiUE9DT0ZSNDQ0NyIsInJhZGl1cyI6MywicG9seWxpbmUiOiJffWx2R29rdVxcZkJibkBySGhsQHBOdmhAfFNwY0BuWGBdYlxcZlVyXnZMel9AckN6X0B1Q3Bed0xiXFxpVW5YYV18U3FjQHBOdWhAcEhpbEBmQmFuQGdCYW5AcUhnbEBxTndoQH1TcWNAb1hfXWNcXGtVcV53THtfQHNDe19AckNzXnRMY1xcaFVvWH5cXH1TcGNAcU52aEBzSGhsQGdCYm5AIiwiY29vcmRpbmF0ZXMiOnsibGF0Ijo0NS43NTU3Njc0Nzk4ODMxMiwibG5nIjo0Ljg2NTk5NzgwMjQ5NjI2fX0".
+                "&numberOfBedroomsMax=3".
+                "&numberOfBedroomsMin=1".
+                "&numberOfRoomsMax=5".
+                "&numberOfRoomsMin=2".
+                "&priceMax=300000".
+                "&spaceMin=30".
+                "&order=DateDesc");
             sleep(1);
             //$crawler = $client->request('GET', 'https://verseoconseillerrecette.securimut.fr/');
 
@@ -358,19 +329,7 @@ class DemoTest extends WebTestCase
             $this->fail('Erreur lors de l\'initialisation du client Panther : ' . $e->getMessage());
         }
 
-        return $this->client;
-    }
-
-    private function crawlNewUrl($url){
-        $this->dumpMethod(__METHOD__);
-        try {
-            $this->crawler = $this->client->request('GET', $url);
-            sleep(1);
-        } catch (\Throwable $e) {
-            $this->fail('Erreur lors du crawl ('.$url.') : ' . $e->getMessage());
-        }
-
-        return $this->client;
+        return $client;
     }
 
 
@@ -436,9 +395,8 @@ class DemoTest extends WebTestCase
         }
     }
 
-    private function geXPath()
+    private function getNodesFromSelector($selector)
     {
-        $this->dumpMethod(__METHOD__);
         $html = $this->client->executeScript('return document.documentElement.outerHTML;');
 
         $this->domDocument = new \DOMDocument('1.0', 'UTF-8');
@@ -446,7 +404,13 @@ class DemoTest extends WebTestCase
         $this->domDocument->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
         libxml_clear_errors();
 
-        return new \DOMXPath($this->domDocument);;
+        $xpath = new \DOMXPath($this->domDocument);
+        $query = '//*'.$selector;
+        $nodes = $xpath->query($query);
+
+        dump('Nombre de blocs trouvés : ' . $nodes->length);
+
+        return $nodes;
     }
 
     private function scrollAndWaitElem($client, $selector, $visibility)
@@ -476,4 +440,5 @@ class DemoTest extends WebTestCase
             }
         } catch (\Exception $e){}
     }
+
 }
