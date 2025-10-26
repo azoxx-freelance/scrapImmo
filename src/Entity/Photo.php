@@ -2,10 +2,9 @@
 
 namespace App\Entity;
 
-use App\Repository\PhotoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PhotoRepository::class)]
+#[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
 class Photo
 {

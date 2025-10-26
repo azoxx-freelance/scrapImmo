@@ -53,7 +53,13 @@ class Annonce
     private ?string $type = null;
 
     #[ORM\Column(nullable: true)]
+    private ?bool $notaire = null;
+
+    #[ORM\Column(nullable: true)]
     private ?int $prix = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $prixSurface = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $annonceur = null;
@@ -92,7 +98,7 @@ class Annonce
     private ?string $ges = null;
 
     #[ORM\Column]
-    private bool $isActive = true;
+    private bool $isActive = false;
 
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $createdAt;
@@ -236,8 +242,22 @@ class Annonce
     /**
      * @param \DateTimeInterface|null $dateConstruction
      */
-    public function setDateConstruction(?\DateTimeInterface $dateConstruction): void
+    public function setDateConstruction($dateConstruction): void
     {
+        if ($dateConstruction === null) {
+            $this->dateConstruction = null;
+            return;
+        }
+
+        if (!$dateConstruction instanceof \DateTimeInterface) {
+            try {
+                $dateConstruction = new \DateTime($dateConstruction);
+            } catch (\Exception $e) {
+                $this->dateConstruction = null;
+                return;
+            }
+        }
+
         $this->dateConstruction = $dateConstruction;
     }
 
@@ -322,6 +342,22 @@ class Annonce
     }
 
     /**
+     * @return bool|null
+     */
+    public function getNotaire(): ?bool
+    {
+        return $this->notaire;
+    }
+
+    /**
+     * @param bool|null $notaire
+     */
+    public function setNotaire(?bool $notaire): void
+    {
+        $this->notaire = $notaire;
+    }
+
+    /**
      * @return int|null
      */
     public function getPrix(): ?int
@@ -335,6 +371,22 @@ class Annonce
     public function setPrix(?int $prix): void
     {
         $this->prix = $prix;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPrixSurface(): ?int
+    {
+        return $this->prixSurface;
+    }
+
+    /**
+     * @param int|null $prixSurface
+     */
+    public function setPrixSurface(?int $prixSurface): void
+    {
+        $this->prixSurface = $prixSurface;
     }
 
     /**

@@ -2,13 +2,46 @@
 
 namespace App\Entity;
 
-use App\Repository\CaracteristiqueRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: CaracteristiqueRepository::class)]
+#[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
 class Caracteristique
 {
+
+    public static $caracteristiquesCategories = [
+        'meubl'         => 'MEUBLE',
+        'ascenseur'     => 'ASCENSEUR',
+        'balcon'        => 'BALCON',
+        'jardin'        => 'JARTDIN',
+        'terrasse'      => 'TERASSE',
+        'cave'          => 'CAVE',
+        'box'           => 'BOX',
+        'tage'          => 'ETAGE',
+        'exposition'    => 'EXPOSITION',
+
+        'parking'       => 'PARKING',
+        'stationnement' => 'PARKING',
+        'garage'        => 'PARKING',
+
+        'chambre'       => 'PIECES',
+        'salle'         => 'PIECES',
+        'wc'            => 'PIECES',
+        'cuisine'       => 'PIECES',
+
+        'type de chauffage' => 'setChauffageType',
+
+        'source'        => 'setChauffageSource',
+        'nergie'        => 'setChauffageSource',
+
+        'année'         => 'setDateConstruction',
+        'construction'  => 'setDateConstruction',
+
+        'état'          => 'setEtat',
+        'etat'          => 'setEtat',
+        'tat'           => 'setEtat',
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

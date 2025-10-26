@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ parent() }} | Home
+{% endblock %}
+
+{% block body %}
+    <div id="home-body" class="body">
+
+        <div id="popupOverlay" class="overlay">
+            <div class="popup">
+                <span class="close">&times;</span>
+                <div class="content"></div>
+            </div>
+        </div>
+
+        <table id="annonceTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th> {# link #}
+                    <th>Titre</th> {# titre + type #}
+                    <th>Année</th>
+                    <th>Prix</th>
+                    <th>Surface</th>
+                    <th>Prix/m²</th>
+                    <th>Etage</th>
+                    <th>Adresse</th>
+                    <th>DPE</th> {# DPE + GES #}
+                    <th>Annonceur</th>
+                    <th>Chauffage</th> {# type + source #}
+                    <th>Date Ajout</th>
+                    <th>Actions</th> {# fav, del, link, detail (photo + desc) #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for annonce in annonces %}
+                    {% set surfaceCalc = (annonce.prix/annonce.prixSurface??1)|round %}
+                    {% set isCorrectPrice = (surfaceCalc > 200 or surfaceCalc == annonce.surface or surfaceCalc+1 == annonce.surface or surfaceCalc-1 == annonce.surface) %}
+                    {% set popupHtml %}
+                        {% for img in annonce.photos %}
+                            <img class='annoncePhoto' src='{{ img.url }}'>
+                        {% endfor %}
+                        <listing>{{ annonce.description }}</listing>
+                        <button data-id='{{ annonce.id }}' class='btn-sm btn-success accept'><i class='fa-solid fa-check'></i></button>
+                        <button data-id='{{ annonce.id }}' class='btn-sm btn-danger remove'><i class='fa-solid fa-xmark'></i></button>
+                    {% endset %}
+
+                    <tr data-popup="{{ popupHtml|e('html_attr') }}">
+                        <td style="min-width: 120px;"><a href="{{ annonce.lien }}">#{{ annonce.id }}</a></td>
+                        <td style="min-width: 250px;">{{ annonce.titre }}</td>
+                        <td style="min-width: 60px;">{{ annonce.dateConstruction|date('Y') }}</td>
+                        <td style="min-width: 90px;" data-order="{{ annonce.prix }}">{{ annonce.prix|number_format(0, '.', ' ') }}€</td>
+                        <td style="min-width: 60px; {{ isCorrectPrice?'':'color: red;' }}" data-order="{{ annonce.surface }}">{{ annonce.surface }}m²{{ isCorrectPrice?'':('<br />'~(annonce.prix/annonce.prixSurface??1)|round~'m²')|raw }}</td>
+                        <td style="min-width: 150px; {{ (annonce.prixSurface <= 3900)?'color: green;':(annonce.prixSurface <= 4900)?'color: yellow;':'color: red;' }}" data-order="{{ annonce.prixSurface }}">
+                            {{ annonce.prixSurface }}€/m²
+                        </td>
+                        <td style="min-width: 100px; {{ (annonce.etageMax > 4 and annonce.etage >= annonce.etageMax-2)?'color: green;':(annonce.etage <= 1)?'color: red;':'color: yellow;' }}">
+                            {{ annonce.etage }} / {{ annonce.etageMax }}
+                        </td>
+                        <td style="min-width: 200px;">{{ annonce.adresse }}</td>
+                        <td style="min-width: 50px; {{ (annonce.dpe in ['A', 'B', 'C'])?'color: green;':(annonce.dpe in ['D', 'E'])?'color: yellow;':'color: red;' }}">{{ annonce.dpe }}<br />{{ annonce.ges }}</td>
+                        <td style="min-width: 200px;">{{ annonce.annonceur }}</td>
+                        <td style="min-width: 150px;">{{ annonce.chauffageSource }}<br />{{ annonce.chauffageType|replace({'Chauffage ': ''}) }}</td>
+                        <td style="min-width: 100px;">{{ annonce.createdAt|date('Y-m-d H:i:s') }}</td>
+                        <td style="min-width: 150px;">
+                            <button data-id="{{ annonce.id }}" class="btn-sm btn-info info"><i class="fa-solid fa-info"></i></button>
+                            <button data-id="{{ annonce.id }}" class="btn-sm btn-success accept"><i class="fa-solid fa-check"></i></button>
+                            <button data-id="{{ annonce.id }}" class="btn-sm btn-danger remove"><i class="fa-solid fa-xmark"></i></button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(document).ready(function() {
+            let table = new DataTable('#annonceTable');
+
+
+            // Ouvrir la popup
+            $('body').on('click', 'button.info', function() {
+                $('#popupOverlay').fadeIn(200).addClass('show');
+                $('.content').html($(this).parent().parent().data('popup'));
+            });
+
+            // Fermer via la croix
+            $('.close').on('click', function() {
+                $('#popupOverlay').fadeOut(200).removeClass('show');
+            });
+
+            // Fermer en cliquant en dehors
+            $('#popupOverlay').on('click', function(e) {
+                if ($(e.target).is('#popupOverlay')) {
+                    $('#popupOverlay').fadeOut(200).removeClass('show');
+                }
+            });
+
+            // Fermer avec la touche ESC
+            $(document).on('keydown', function(e) {
+                if (e.key === "Escape") {
+                    $('#popupOverlay').fadeOut(200).removeClass('show');
+                }
+            });
+        });
+
+
+    </script>
+{% endblock %}

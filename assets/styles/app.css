@@ -1,0 +1,86 @@
+body {
+    background-color: lightgray;
+    min-height: 100vh;
+}
+
+table.table {
+    vertical-align: middle;
+    text-align: center;
+    text-wrap: balance;
+}
+
+table.table tr td {
+    height:     80px;
+    white-space: normal;
+    padding: 0;
+}
+
+
+
+/* --- Overlay --- */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;                /* cachée par défaut */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* --- Popup --- */
+.popup {
+    background: #fff;
+    width: 90%;
+    height: 90%;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    position: relative;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.popup img.annoncePhoto {
+    width: 50%;
+    padding: 5px;
+}
+
+.popup .content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup .content listing {
+    max-width: 100%;
+    text-wrap: auto;
+    padding: 25px;
+}
+
+/* --- Croix de fermeture --- */
+.popup .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.popup .close:hover {
+    color: #000;
+}
+
+/* --- Effet d’apparition --- */
+.overlay.show {
+    display: flex !important;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
