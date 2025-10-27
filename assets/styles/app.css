@@ -15,6 +15,9 @@ table.table tr td {
     padding: 0;
 }
 
+span.badge {
+    margin: 5px;
+}
 
 
 /* --- Overlay --- */
@@ -55,7 +58,8 @@ table.table tr td {
 .popup .content listing {
     max-width: 100%;
     text-wrap: auto;
-    padding: 25px;
+    padding: 50px;
+    width: 100%;
 }
 
 /* --- Croix de fermeture --- */

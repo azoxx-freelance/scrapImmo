@@ -1,0 +1,39 @@
+
+{% set showIcon = (showIcon is not defined)?true:showIcon %}
+{% set finalHtmlBadgeList = '' %}
+{% for c in caracteristiques %}
+    {% if c.code not in ['INFO', 'PIECE', 'ETAGE', 'MEDIA'] %}
+        {% set colorIcon = ('pas' in c.value or 'non' in c.value)?'red':'green' %}
+        {% set colorBadge = ('pas' in c.value or 'non' in c.value)?'bg-danger':'bg-success' %}
+        {% if showIcon and (c.code in ['BOX', 'PARKING'] or 'box' in c.value or 'parking' in c.value or 'garage' in c.value) %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-p"></i>
+        {% elseif showIcon and (c.code in ['ASCENSEUR'] or 'ascenseur' in c.value)  %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-elevator"></i>
+        {% elseif showIcon and (c.code in ['BALCON','TERASSE'] or 'balcon' in c.value or 'terrasse' in c.value) %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-store"></i>
+        {% elseif showIcon and (c.code in ['CAVE'] or 'cave' in c.value) %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-boxes-stacked"></i>
+        {% elseif showIcon and (c.code in ['JARDIN'] or 'jardin' in c.value) %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-seedling"></i>
+        {% elseif showIcon and (c.code in ['MEUBLE'] or 'meubl' in c.value) %}
+            <i style="color: {{ colorIcon }};" class="fa-solid fa-couch"></i>
+        {% elseif (c.code in ['AUTRE'] or not showIcon)
+            and 'mobilité réduite' not in c.value
+            and 'calme' not in c.value
+            and 'cuisine' not in c.value
+            and 'salon' not in c.value
+            and 'salle' not in c.value
+            and 'exposition' not in c.value
+            and 'interphone' not in c.value
+            and 'digicode' not in c.value
+            and 'alarme' not in c.value
+            and 'disponible' not in c.value
+            and 'entrée séparée' not in c.value
+        %}
+            {% set finalHtmlBadgeList = finalHtmlBadgeList ~ '<span class="badge ' ~ (showIcon?'bg-secondary':colorBadge) ~ '">'
+                ~ (c.value|replace({'revêtement du sol: ':'', 'rez-de-chaussée':'RDC'}))
+                ~ '</span>' %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{{ ((finalHtmlBadgeList|length > 0)?'<br />'~finalHtmlBadgeList:'')|raw }}
