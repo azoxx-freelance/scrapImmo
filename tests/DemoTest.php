@@ -97,14 +97,7 @@ class DemoTest extends WebTestCase
         /////////////////////////////////////////// FILL NEW ANNONCES ///////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        $newAnnonces = $annonceRepo
-            ->createQueryBuilder('a')
-            ->leftJoin('a.caracteristiques', 'c')
-            ->andWhere('c.id IS NULL')
-            ->getQuery()
-            ->getResult();
-
-        //$newAnnonces = $annonceRepo->findBy(['status' => null]);
+        $newAnnonces = $annonceRepo->findBy(['status' => null]);
         dump("New Annonce: " . count($newAnnonces));
         $caracList = Caracteristique::$caracteristiquesCategories;
 
@@ -115,6 +108,15 @@ class DemoTest extends WebTestCase
             $xpath = $this->geXPath();
             $this->client->getWebDriver()->executeScript("UC_UI.denyAllConsents().then(UC_UI.closeCMP);");
             //$outerHtml = $this->domDocument->saveHTML($nodeInfo[0]);
+
+            /////////////// DELETED ///////////////
+            $nodes = iterator_to_array($xpath->query('//div[contains(normalize-space(.), "Annonce supprimée")]'));
+            $nodes = array_merge($nodes, iterator_to_array($xpath->query('//div[contains(normalize-space(.), "Cette annonce n\'est plus disponible")]')));
+            if(count($nodes) > 0) {
+                $annonce->setStatus('DELETED');
+                $this->em->flush();
+                continue;
+            }
 
             /////////////// ADRESSE ///////////////
             $adresseRaw = $xpath->evaluate('string(//button[@data-testid="cdp-location-address"])');

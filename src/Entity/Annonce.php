@@ -15,6 +15,22 @@ class Annonce
         'LBC'   => 'LBC',   // LeBonCoin
     ];
 
+    public static $motifRefus = [
+        'Cuisine étroite'       => 'CUISINE_ETROITE',
+        'Salle de bain étroite' => 'SDB_ETROITE',
+        'Cuisine vetuste'       => 'CUISINE_VETUSTE',
+        'Salle de bain vetuste' => 'SDB_VETUSTE',
+        'rez-de-chaussée'       => 'RDC',
+        'Cuisine dans le salon' => 'CUISINE_SALON',
+        'Vetuste'               => 'VETUSTE',
+    ];
+
+    public static $motifSelection = [
+        'Belle vue'         => 'CUISINE_ETROITE',
+        'Intérieur sympas'  => 'SDB_ETROITE',
+        'Bon agencement'    => 'CUISINE_VETUSTE',
+    ];
+
     #[ORM\Id]
     #[ORM\Column(length: 50)]
     private ?string $id = null;
