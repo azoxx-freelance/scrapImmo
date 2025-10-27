@@ -308,8 +308,8 @@ class DemoTest extends WebTestCase
 
 
             /////////////// CARACTERISTIQUES ///////////////
-            $listResume = $xpath->query( '//section[@data-testid="cdp-features"]//ul//li');
             $listComplete = $xpath->query( '//div[@role="dialog"]//li');
+            $listResume = (count($listComplete) > 0)?[]:$xpath->query( '//section[@data-testid="cdp-features"]//ul//li');
             $list = array_merge(iterator_to_array($listResume), iterator_to_array($listComplete));
 
             foreach ($list as $item) {
