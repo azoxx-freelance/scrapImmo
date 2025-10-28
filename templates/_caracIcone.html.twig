@@ -1,4 +1,5 @@
 
+{% set showBr = (showBr is not defined)?true:showBr %}
 {% set showIcon = (showIcon is not defined)?true:showIcon %}
 {% set finalHtmlBadgeList = '' %}
 {% for c in caracteristiques %}
@@ -36,4 +37,4 @@
         {% endif %}
     {% endif %}
 {% endfor %}
-{{ ((finalHtmlBadgeList|length > 0)?'<br />'~finalHtmlBadgeList:'')|raw }}
+{{ ((finalHtmlBadgeList|length > 0)?((showBr)?'<br />':'')~finalHtmlBadgeList:'')|raw }}

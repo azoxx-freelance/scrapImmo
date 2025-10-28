@@ -37,6 +37,7 @@ span.badge {
     width: 90%;
     height: 90%;
     border-radius: 12px;
+    border: 2px lightgray solid;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     position: relative;
     padding: 0;
@@ -65,9 +66,9 @@ span.badge {
 /* --- Croix de fermeture --- */
 .popup .close {
     position: absolute;
-    top: 10px;
+    top: -5px;
     right: 15px;
-    font-size: 28px;
+    font-size: 30px;
     font-weight: bold;
     color: #444;
     cursor: pointer;

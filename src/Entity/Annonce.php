@@ -23,12 +23,14 @@ class Annonce
         'rez-de-chaussée'       => 'RDC',
         'Cuisine dans le salon' => 'CUISINE_SALON',
         'Vetuste'               => 'VETUSTE',
+        'Bail commercial'       => 'BAIL',
     ];
 
     public static $motifSelection = [
         'Belle vue'         => 'CUISINE_ETROITE',
         'Intérieur sympas'  => 'SDB_ETROITE',
         'Bon agencement'    => 'CUISINE_VETUSTE',
+        'Bon feeling'       => 'FEELING',
     ];
 
     #[ORM\Id]
@@ -115,6 +117,9 @@ class Annonce
 
     #[ORM\Column]
     private bool $isActive = false;
+
+    #[ORM\Column]
+    private bool $isSwiped = false;
 
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $createdAt;
@@ -603,6 +608,22 @@ class Annonce
     public function isActive(): bool
     {
         return $this->isActive;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSwiped(): bool
+    {
+        return $this->isSwiped;
+    }
+
+    /**
+     * @param bool $isSwiped
+     */
+    public function setIsSwiped(bool $isSwiped): void
+    {
+        $this->isSwiped = $isSwiped;
     }
 
     /**

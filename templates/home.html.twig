@@ -9,7 +9,6 @@
 
         <div id="popupOverlay" class="overlay">
             <div class="popup">
-                <span class="close">&times;</span>
                 <div class="content"></div>
             </div>
         </div>
@@ -38,6 +37,23 @@
                     {% set surfaceCalc = (annonce.prix/annonce.prixSurface??1)|round %}
                     {% set isCorrectPrice = (surfaceCalc > 200 or surfaceCalc == annonce.surface or surfaceCalc+1 == annonce.surface or surfaceCalc-1 == annonce.surface) %}
                     {% set popupHtml %}
+                        <div class="col-12" style="position: sticky; top: 0; padding: 5px 15px; background-color: #FFFFFF">
+                            <span class="close">&times;</span>
+                            <h3>
+                                <a href="{{ annonce.lien }}">#{{ annonce.id }}</a> - {{ annonce.titre }}
+                            </h3>
+                            <span>
+                                {{ annonce.createdAt|date('d/m/Y') }} - {{ annonce.prix|number_format(0, '.', ' ') }}€
+                                ({{ annonce.prixSurface??((annonce.prix/annonce.surface)|round) }}€/m²)
+                                 - {{ annonce.surface }}m² - <strong>Année:</strong> {{ annonce.dateConstruction|date('Y') }}
+                                 - <strong>DPE:</strong> {{ annonce.dpe }} - <strong>Etage:</strong> {{ annonce.etage }}/{{ annonce.etageMax }}
+                                 - <strong>Chauffage:</strong> {{ annonce.chauffageSource }} ({{ annonce.chauffageType|replace({'Chauffage ': ''}) }})
+                                 - <strong>Vendeur:</strong> {{ annonce.annonceur }} - {{ annonce.adresse }}
+                                 - {{ include('_caracIcone.html.twig', {'caracteristiques':annonce.caracteristiques,'showBr':false}) }}
+                            </span>
+
+                        </div>
+
                         {% for img in annonce.photos %}
                             <img class='annoncePhoto' src='{{ img.url }}'>
                         {% endfor %}
