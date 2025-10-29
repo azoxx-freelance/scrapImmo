@@ -32,7 +32,7 @@
             and 'entrée séparée' not in c.value
         %}
             {% set finalHtmlBadgeList = finalHtmlBadgeList ~ '<span class="badge ' ~ (showIcon?'bg-secondary':colorBadge) ~ '">'
-                ~ (c.value|replace({'revêtement du sol: ':'', 'rez-de-chaussée':'RDC'}))
+                ~ (c.value|replace({'revêtement du sol: ':'', 'rez-de-chaussée':'RDC', 'Type de chauffage: ':'', 'Chauffage: ':''}))
                 ~ '</span>' %}
         {% endif %}
     {% endif %}
