@@ -1,9 +1,10 @@
 
+{% set showAll = (showAll is not defined)?false:showAll %}
 {% set showBr = (showBr is not defined)?true:showBr %}
 {% set showIcon = (showIcon is not defined)?true:showIcon %}
 {% set finalHtmlBadgeList = '' %}
 {% for c in caracteristiques %}
-    {% if c.code not in ['INFO', 'PIECE', 'ETAGE', 'MEDIA'] %}
+    {% if showAll or c.code not in ['INFO', 'PIECE', 'ETAGE', 'MEDIA'] %}
         {% set colorIcon = ('pas' in c.value or 'non' in c.value)?'red':'green' %}
         {% set colorBadge = ('pas' in c.value or 'non' in c.value)?'bg-danger':'bg-success' %}
         {% if showIcon and (c.code in ['BOX', 'PARKING'] or 'box' in c.value or 'parking' in c.value or 'garage' in c.value) %}
@@ -34,6 +35,8 @@
             {% set finalHtmlBadgeList = finalHtmlBadgeList ~ '<span class="badge ' ~ (showIcon?'bg-secondary':colorBadge) ~ '">'
                 ~ (c.value|replace({'revêtement du sol: ':'', 'rez-de-chaussée':'RDC', 'Type de chauffage: ':'', 'Chauffage: ':''}))
                 ~ '</span>' %}
+        {% elseif (showAll) %}
+            {% set finalHtmlBadgeList = finalHtmlBadgeList ~ '<span class="badge bg-secondary">' ~ (c.value) ~ '</span>' %}
         {% endif %}
     {% endif %}
 {% endfor %}

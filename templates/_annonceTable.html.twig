@@ -63,9 +63,7 @@
                     {{ include('_caracIcone.html.twig', {'caracteristiques':annonce.caracteristiques, 'showIcon':false}) }}
                 </div>
 
-                <listing>
-                    {{ annonce.description }}
-                </listing>
+                <listing class="desc">{{ annonce.description }}</listing>
 
                 <div class="col-12" style="text-align: center; padding: 20px;">
                     <button data-id='{{ annonce.id }}' class='btn-sm btn-success accept'><i class='fa-solid fa-check'></i></button>

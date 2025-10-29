@@ -33,4 +33,22 @@ class AnnonceController extends AbstractController
             'annonces' => $annonces,
         ]);
     }
+
+    #[Route('/annonce/{id}', name: 'annonce_detail')]
+    public function detail(string $id): Response
+    {
+        if (!$this->userService->getCurrentUser()) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $annonce = $this->em->getRepository(Annonce::class)->find($id);
+
+        if (!$annonce) {
+            throw $this->createNotFoundException('Annonce non trouvée');
+        }
+
+        return $this->render('annonce_detail.html.twig', [
+            'annonce' => $annonce,
+        ]);
+    }
 }

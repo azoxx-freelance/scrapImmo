@@ -56,10 +56,10 @@ span.badge {
     justify-content: center;
 }
 
-.popup .content listing {
+listing.desc {
     max-width: 100%;
     text-wrap: auto;
-    padding: 50px;
+    padding: 20px;
     width: 100%;
 }
 
