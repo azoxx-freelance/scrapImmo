@@ -27,7 +27,8 @@ class AnnonceController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        $annonces = $this->em->getRepository(Annonce::class)->findBy(['isActive'=>true], ['createdAt'=>'ASC']);
+        //$annonces = $this->em->getRepository(Annonce::class)->findBy(['isActive'=>true], ['createdAt'=>'ASC']);
+        $annonces = $this->em->getRepository(Annonce::class)->findBy(['isActive'=>true, 'isSwiped'=>true], ['createdAt'=>'ASC']);
         return $this->render('home.html.twig', [
             'annonces' => $annonces,
         ]);
