@@ -49,7 +49,15 @@
         <!-- Informations principales -->
         <div class="card mb-4">
             <div class="card-header">
-                <span class="text-muted">{{ annonce.createdAt|date('d-m-Y') }}</span>
+                <span class="text-muted">
+                    {{ annonce.createdAt|date('d-m-Y') }}
+                </span>
+
+                <span class="badge {{ annonce.isSwiped?(annonce.isActive?'bg-success':'bg-danger'):'bg-warning' }}" style="right: 10px; position: absolute;">
+                    <i class='fa-solid fa-{{ annonce.isSwiped?(annonce.isActive?'check':'xmark'):'hourglass' }}'></i>
+                    {{ annonce.isSwiped?(annonce.isActive?'Validé':'Refusé'):'En attente' }}
+                </span>
+
                 <h4>{{ annonce.titre }}</h4>
             </div>
             <div class="card-body">
@@ -114,6 +122,17 @@
                 </div>
 
                 <hr>
+
+                {% if annonce.isSwiped %}
+                    <div>
+                        <strong>Motifs :</strong><br>
+                        {% for motif in annonce.swipedMotifs|split(', ') %}
+                            <span class="badge bg-secondary">{{ annonce.allMotifsFlip[motif] }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                {% endif %}
 
                 <div>
                     <strong>Caractéristiques :</strong><br>

@@ -24,14 +24,32 @@ class Annonce
         'Cuisine dans le salon' => 'CUISINE_SALON',
         'Vetuste'               => 'VETUSTE',
         'Bail commercial'       => 'BAIL',
+        'Petit'                 => 'SMALL',
+        'Pas ouf'               => 'BOF',
     ];
 
     public static $motifSelection = [
-        'Belle vue'         => 'CUISINE_ETROITE',
-        'Intérieur sympas'  => 'SDB_ETROITE',
-        'Bon agencement'    => 'CUISINE_VETUSTE',
+        'Belle vue'         => 'VUE',
+        'Mention honorable' => 'HONOR',
         'Bon feeling'       => 'FEELING',
+        'Intérieur sympas'  => 'INTERIOR',
+        'Bon agencement'    => 'AGENCEMENT',
     ];
+
+    public static function getMotifRefus(): array
+    {
+        return self::$motifRefus;
+    }
+
+    public static function getMotifSelection(): array
+    {
+        return self::$motifSelection;
+    }
+
+    public static function getAllMotifsFlip(): array
+    {
+        return array_flip(array_merge(self::$motifSelection,self::$motifRefus));
+    }
 
     #[ORM\Id]
     #[ORM\Column(length: 50)]
@@ -120,6 +138,9 @@ class Annonce
 
     #[ORM\Column]
     private bool $isSwiped = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $swipedMotifs = null;
 
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $createdAt;
@@ -632,6 +653,16 @@ class Annonce
     public function setIsActive(bool $isActive): void
     {
         $this->isActive = $isActive;
+    }
+
+    public function getSwipedMotifs(): ?string
+    {
+        return $this->swipedMotifs;
+    }
+
+    public function setSwipedMotifs(?string $swipedMotifs): void
+    {
+        $this->swipedMotifs = $swipedMotifs;
     }
 
     /**

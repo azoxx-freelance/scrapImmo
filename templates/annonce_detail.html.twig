@@ -12,11 +12,14 @@
             </a>
         </div>
         <div class="col-6" style="text-align: right;">
-            <a data-id='{{ annonce.id }}' class='btn btn-success accept'><i class='fa-solid fa-check'></i></a>
-            <a data-id='{{ annonce.id }}' class='btn btn-danger remove'><i class='fa-solid fa-xmark'></i></a>
             {% set textSource = {'SL': 'SeLoger', 'LBC': 'LeBonCoin'} %}
             <a href="{{ annonce.lien }}" class="btn btn-primary">
                 <i class="fas fa-external-link-alt"></i> Voir l'annonce sur <strong>{{ textSource[annonce.source]??annonce.source }}</strong>
+            </a>
+            <a data-id='{{ annonce.id }}' class='btn btn-success accept'><i class='fa-solid fa-check'></i></a>
+            <a data-id='{{ annonce.id }}' class='btn btn-danger remove'><i class='fa-solid fa-xmark'></i></a>
+            <a href="{{ path('annonce_swipe_next') }}" class='btn btn-secondary remove'>
+                <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
             </a>
         </div>
     </div>
@@ -25,4 +28,93 @@
 
     {{ include('_annonce_detail.html.twig', {'annonce':annonce}) }}
 </div>
+
+<!-- Modal pour les motifs -->
+<div class="modal fade" id="motifsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="motifsModalTitle">Motifs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="motifsContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="validateMotifs">Valider</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    let currentAction = '';
+    let currentAnnonceId = '';
+
+    // Motifs depuis l'entité Annonce
+    const motifsAccept = {{ annonce.motifSelection|json_encode|raw }};
+    const motifsReject = {{ annonce.motifRefus|json_encode|raw }};
+
+    // Clic sur accepter
+    $('.accept').on('click', function() {
+        currentAction = 'accept';
+        currentAnnonceId = $(this).data('id');
+        showMotifsModal('Motifs de sélection', motifsAccept);
+    });
+
+    // Clic sur refuser
+    $('.remove').on('click', function() {
+        currentAction = 'reject';
+        currentAnnonceId = $(this).data('id');
+        showMotifsModal('Motifs de refus', motifsReject);
+    });
+
+    function showMotifsModal(title, motifs) {
+        $('#motifsModalTitle').text(title);
+        let content = '';
+        Object.keys(motifs).forEach(function(key, index) {
+            content += `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${motifs[key]}" id="motif${index}">
+                    <label class="form-check-label" for="motif${index}">
+                        ${key}
+                    </label>
+                </div>
+            `;
+        });
+        $('#motifsContent').html(content);
+        $('#motifsModal').modal('show');
+    }
+
+    // Validation des motifs
+    $('#validateMotifs').on('click', function() {
+        let selectedMotifs = [];
+        $('#motifsContent input:checked').each(function() {
+            selectedMotifs.push($(this).val());
+        });
+
+        if (selectedMotifs.length === 0) {
+            alert('Veuillez sélectionner au moins un motif');
+            return;
+        }
+
+        let motifsString = selectedMotifs.join(', ');
+        //let url = `/annonce/${currentAnnonceId}/${currentAction}?motifs=${encodeURIComponent(motifsString)}`;
+        let url = '{{ path('annonce_swipe_js', {'id':annonce.id}) }}'+currentAction+'?motifs='+encodeURIComponent(motifsString);
+
+        $.post(url)
+            .done(function() {
+                $('#motifsModal').modal('hide');
+                location.reload();
+            })
+            .fail(function() {
+                alert('Erreur lors de la sauvegarde');
+            });
+    });
+});
+</script>
 {% endblock %}
