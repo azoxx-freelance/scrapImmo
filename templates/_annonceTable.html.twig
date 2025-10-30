@@ -4,6 +4,7 @@
             <th>ID</th> {# link #}
             <th>Image</th> {# link #}
             <th>Titre</th> {# titre + type #}
+            <th>Annonceur</th>
             <th>Année</th>
             <th>Prix</th>
             <th>Surface</th>
@@ -12,7 +13,6 @@
             <th>Adresse</th>
             <th>DPE</th> {# DPE + GES #}
             <th>Carracteristiques</th>
-            <th>Chauffage</th> {# type + source #}
             <th>Date Ajout</th>
             <th>Actions</th> {# fav, del, link, detail (photo + desc) #}
         </tr>
@@ -20,6 +20,7 @@
             <th>ID</th>
             <th>Image</th>
             <th>Titre</th>
+            <th>Annonceur</th>
             <th>Année</th>
             <th>Prix</th>
             <th>Surface</th>
@@ -28,7 +29,6 @@
             <th>Adresse</th>
             <th>DPE</th>
             <th>Carracteristiques</th>
-            <th>Chauffage</th>
             <th>Date Ajout</th>
             <th><button id="resetFilters" class="btn btn-warning btn-sm" title="Reset tous les filtres"><i class="fas fa-undo"></i></button></th>
         </tr>
@@ -45,6 +45,7 @@
                     {% endif %}
                 </td>
                 <td style="min-width: 150px;">{{ annonce.titre }}</td>
+                <td style="min-width: 100px;">{{ annonce.annonceur }}</td>
                 <td style="min-width: 60px;">{{ annonce.dateConstruction|date('Y') }}</td>
                 <td style="min-width: 90px;" data-order="{{ annonce.prix }}">{{ annonce.prix|number_format(0, '.', ' ') }}€</td>
                 <td style="min-width: 60px; {{ isCorrectPrice?'':'color: red;' }}" data-order="{{ annonce.surface }}">{{ annonce.surface }}m²{{ isCorrectPrice?'':('<br />'~(annonce.prix/annonce.prixSurface??1)|round~'m²')|raw }}</td>
@@ -59,7 +60,7 @@
                 <td style="min-width: 180px;">
                     {{ include('_caracIcone.html.twig', {'caracteristiques':annonce.caracteristiques}) }}
                 </td>
-                <td style="min-width: 150px;">{{ annonce.chauffageSource }}<br />{{ annonce.chauffageType|replace({'Chauffage ': ''}) }}</td>
+                {# <td style="min-width: 150px;">{{ annonce.chauffageSource }}<br />{{ annonce.chauffageType|replace({'Chauffage ': ''}) }}</td> #}
                 <td style="min-width: 100px;">{{ annonce.createdAt|date('Y-m-d H:i:s') }}</td>
                 <td style="min-width: 50px;">
                     <button data-id="{{ annonce.id }}" class="btn-sm btn-info info"><i class="fa-solid fa-info"></i></button>
@@ -79,6 +80,7 @@
             language: {
                 search: "",
             },
+            orderCellsTop: true,
             initComplete: function () {
                 // Masquer la recherche globale
                 $('.dataTables_filter').hide();
@@ -88,7 +90,37 @@
                     let title = column.header().textContent;
 
                     if(title === 'Actions' || title.length <= 0) {
+                        // Ne rien faire pour Actions
+                    } else if(title === 'Annonceur') {
+                        // Créer un input avec datalist pour l'autocomplétion
+                        let input = document.createElement('input');
+                        input.placeholder = 'Annonceur';
+                        input.className = 'form-control form-control-sm column-search';
+                        input.setAttribute('list', 'annonceurs-list');
 
+                        let datalist = document.createElement('datalist');
+                        datalist.id = 'annonceurs-list';
+
+                        // Récupérer les valeurs uniques de la colonne
+                        column.data().unique().sort().each(function(d) {
+                            if(d) {
+                                let option = document.createElement('option');
+                                option.value = d;
+                                datalist.appendChild(option);
+                            }
+                        });
+
+                        let container = document.createElement('div');
+                        container.appendChild(input);
+                        container.appendChild(datalist);
+
+                        $('#annonceTable thead tr:eq(1) th:eq(' + index + ')').html(container);
+
+                        input.addEventListener('keyup', () => {
+                            if (column.search() !== input.value) {
+                                column.search(input.value).draw();
+                            }
+                        });
                     } else {
                         let input = document.createElement('input');
                         input.placeholder = title;
@@ -154,6 +186,30 @@
 
 <style>
 .dataTables_wrapper .dataTables_paginate {
+    text-align: center;
+}
+.dataTables_wrapper .dataTables_length {
+    text-align: right;
+}
+.dataTables_wrapper .dataTables_info {
+    text-align: left;
+}
+#annonceTable_wrapper .text-end {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+/* Désactiver le tri sur la deuxième ligne de header */
+#annonceTable thead tr:nth-child(2) th {
+    cursor: default !important;
+}
+#annonceTable thead tr:nth-child(2) th:before,
+#annonceTable thead tr:nth-child(2) th:after {
+    display: none !important;
+}
+
+bles_paginate {
     text-align: center;
 }
 .dataTables_wrapper .dataTables_length {
