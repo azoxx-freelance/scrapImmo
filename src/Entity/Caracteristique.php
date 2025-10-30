@@ -40,6 +40,19 @@ class Caracteristique
         'état'          => 'setEtat',
         'etat'          => 'setEtat',
         'tat'           => 'setEtat',
+
+        'Type de bien'              => 'setType',
+        'Surface habitable'         => 'setSurface',
+        'Nombre de pièces'          => 'setNbPiece',
+        'Nombre de chambres'        => 'nbChambre',
+        'Nombre de salles de bain'  => 'PIECE',
+        'Caractéristiques'          => 'returnNull',
+        'Étage de votre bien'       => 'setEtage',
+        'Ascenseur'                 => 'ASCENSEUR',
+        'Extérieur'                 => 'BALCON',
+        'Année de construction'     => 'setDateConstruction',
+        'État du bien'              => 'setEtat',
+        'Référence'                 => 'REF',
     ];
 
     #[ORM\Id]

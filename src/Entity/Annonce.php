@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use function PHPUnit\Framework\isFloat;
 
 #[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
@@ -474,8 +475,22 @@ class Annonce
     /**
      * @param float|null $surface
      */
-    public function setSurface(?float $surface): void
+    public function setSurface($surface): void
     {
+        if ($surface === null) {
+            $this->surface = null;
+            return;
+        }
+
+        if(!isFloat($surface)) {
+            try {
+                $surface = floatval($surface);
+            } catch (\Exception $e) {
+                $this->surface = null;
+                return;
+            }
+        }
+
         $this->surface = $surface;
     }
 
@@ -743,6 +758,11 @@ class Annonce
     public function setPhotos(ArrayCollection|Collection $photos): void
     {
         $this->photos = $photos;
+    }
+
+    public function returnNull()
+    {
+        return;
     }
 
 }
