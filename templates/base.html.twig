@@ -19,6 +19,25 @@
         <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         {{ encore_entry_script_tags('app') }}
+
+        <script>
+        $(document).ready(function() {
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                let id = $('#searchId').val().trim();
+                if (id) {
+                    window.location.href = ('{{ path('annonce_detail', {'id':'___REPLACE_ME___'}) }}').replace('___REPLACE_ME___', id);
+                }
+            });
+
+            $('#searchId').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $('#searchForm').submit();
+                }
+            });
+        });
+        </script>
+
         {% block javascripts %}{% endblock %}
     </head>
     <body>
@@ -40,16 +59,16 @@
                         <!-- Liens au centre -->
                         <ul class="navbar-nav mx-auto">
                             <li class="nav-item">
+                                <!-- Recherche par ID -->
+                                <form class="d-flex me-3" id="searchForm">
+                                    <input class="form-control" type="text" placeholder="ID annonce" id="searchId" style="width: 120px;">
+                                </form>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ path('main') }}">Accueil</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Rechercher</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link" href="#">Favoris</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">À propos</a>
                             </li>
                         </ul>
 

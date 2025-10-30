@@ -123,7 +123,7 @@
 
                 <hr>
 
-                {% if annonce.isSwiped %}
+                {% if annonce.isSwiped and annonce.swipedMotifs %}
                     <div>
                         <strong>Motifs :</strong><br>
                         {% for motif in annonce.swipedMotifs|split(', ') %}
